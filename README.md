@@ -2,7 +2,7 @@
 
 newb 是 newbie 的缩写,网络新兵,菜鸟的意思。
 
-一个整合DDD(领域驱动设计)、 Gin框架、Zap日志、Fx依赖注入、Viper配置管理的轻量级、高扩展性的 Golang Web 应用快速开发模板，是模板不是框架!
+一个整合DDD(领域驱动设计)、 Echo框架、Zap日志、Fx依赖注入、Viper配置管理的轻量级、高扩展性的 Golang Web 应用快速开发模板，是模板不是框架!
 
 > 🚀 帮助你快速构建清晰可扩展的 Golang 微服务 / API 应用。
 
@@ -37,7 +37,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/lxhanghub/newb/pkg/cache"
 	"github.com/lxhanghub/newb/pkg/database"
 	"github.com/lxhanghub/newb/pkg/host"
@@ -76,10 +76,11 @@ func main() {
 	//app.UseSwagger()
 
 	// 配置路由
-	app.MapRoutes(func(router *gin.Engine) {
-		router.GET("/ping", func(c *gin.Context) {
-
-			c.JSON(200, gin.H{"message": "hello world"})
+	app.MapRoutes(func(router *echo.Echo) {
+		router.GET("/ping", func(c echo.Context) error {
+			return c.JSON(200, map[string]string{
+				"message": "hello world",
+			})
 		})
 	})
 
