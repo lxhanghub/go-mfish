@@ -1,7 +1,10 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
+	"crypto/subtle"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // AuthorizationMiddleware is a middleware for handling authorization.
@@ -24,10 +27,14 @@ func NewAuthorizationMiddleware(skipPaths []string) *AuthorizationMiddleware {
 }
 
 // Handle implements the Middleware interface for AuthorizationMiddleware.
-func (a *AuthorizationMiddleware) Handle() gin.HandlerFunc {
-	//直接返回 gin.BasicAuth、gin JWT中间件，或者自定义
-	return gin.BasicAuth(gin.Accounts{
-		"admin": "password123",
+func (a *AuthorizationMiddleware) Handle() echo.MiddlewareFunc {
+	return middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		// Be careful to use constant time comparison to prevent timing attacks
+		if subtle.ConstantTimeCompare([]byte(username), []byte("joe")) == 1 &&
+			subtle.ConstantTimeCompare([]byte(password), []byte("secret")) == 1 {
+			return true, nil
+		}
+		return false, nil
 	})
 }
 

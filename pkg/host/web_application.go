@@ -6,20 +6,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	stdstrings "strings"
 	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type Middleware interface {
-	Handle() gin.HandlerFunc
+	Handle() echo.MiddlewareFunc
 	ShouldSkip(path string) bool
 }
 
@@ -37,34 +36,70 @@ type WebApplicationOptions struct {
 	Server ServerOptions
 }
 
-func newWebApplication(optinos WebApplicationOptions) *WebApplication {
-
-	if optinos.Server == (ServerOptions{}) {
+func newWebApplication(options WebApplicationOptions) *WebApplication {
+	if options.Server == (ServerOptions{}) {
 		panic("web host options is empty")
 	}
 
-	mode := optinos.Host.config.GetString("gin.mode")
+	e := echo.New()
 
-	switch stdstrings.ToLower(mode) {
-	case "debug":
-		gin.SetMode(gin.DebugMode)
-	case "test":
-		gin.SetMode(gin.TestMode)
+	// 读取 echo.debug 配置
+	debug := options.Host.config.GetBool("echo.debug")
+	switch {
+	case debug:
+		// Debug模式
+		e.Debug = true
+		e.HideBanner = false
+		e.HidePort = false
+		options.Host.logger.Info("Running in Debug mode")
 	default:
-		gin.SetMode(gin.ReleaseMode)
+		// Release模式
+		e.Debug = false
+		e.HideBanner = true
+		e.HidePort = true
+		options.Host.logger.Info("Running in Release mode")
 	}
 
-	gin := gin.New()
-	// 🔥 挂载自己的 zap logger + recovery
-	gin.Use(NewGinZapLogger(optinos.Host.logger))
+	// 替代 recovery 和 logger 使用 zap
 
-	gin.Use(RecoveryWithZap(optinos.Host.logger))
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			if e.Debug {
+				// Debug模式，全部打日志
+				options.Host.logger.Info("request",
+					zap.String("URI", v.URI),
+					zap.Int("status", v.Status),
+				)
+			} else {
+				// Release模式，只打非200
+				if v.Status != http.StatusOK {
+					options.Host.logger.Info("request",
+						zap.String("URI", v.URI),
+						zap.Int("status", v.Status),
+					)
+				}
+			}
+			return nil
+		},
+	}))
+
+	e.Use(echomiddleware.RecoverWithConfig(echomiddleware.RecoverConfig{
+		LogErrorFunc: func(c echo.Context, err error, stack []byte) error {
+			options.Host.logger.Error("panic recovered",
+				zap.Error(err),
+				zap.ByteString("stack", stack),
+			)
+			return nil
+		},
+	}))
 
 	return &WebApplication{
-		Application:  optinos.Host,
-		handler:      gin,
+		Application:  options.Host,
+		handler:      e,
 		middlewares:  make([]Middleware, 0),
-		serverOptons: optinos.Server,
+		serverOptons: options.Server,
 	}
 }
 
@@ -72,12 +107,10 @@ func (app *WebApplication) Run(ctx ...context.Context) error {
 	var appCtx context.Context
 	var cancel context.CancelFunc
 
-	// 如果调用者未传递上下文，则创建默认上下文
 	if len(ctx) == 0 || ctx[0] == nil {
 		appCtx, cancel = context.WithCancel(context.Background())
 		defer cancel()
 
-		// 捕获系统信号，优雅关闭
 		go func() {
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -86,7 +119,6 @@ func (app *WebApplication) Run(ctx ...context.Context) error {
 			cancel()
 		}()
 	} else {
-		// 使用调用者传递的上下文
 		appCtx = ctx[0]
 	}
 
@@ -98,47 +130,43 @@ func (app *WebApplication) Run(ctx ...context.Context) error {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// 启动 HTTP 服务器
-	go func() {
-		app.Logger().Info("HTTP server starting...", zap.String("port", app.serverOptons.Port))
-
-		if err := app.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			app.Logger().Error("HTTP server ListenAndServe error", zap.Error(err))
-		}
-	}()
-
+	// 注册中间件（适配 interface）
 	for _, mw := range app.middlewares {
-		// 创建一个局部变量，避免闭包捕获问题
 		currentMiddleware := mw
-		app.engine().Use(func(c *gin.Context) {
-			if !currentMiddleware.ShouldSkip(c.Request.URL.Path) {
-				handler := currentMiddleware.Handle()
-				handler(c)
-			} else {
-				c.Next()
+		app.engine().Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				if !currentMiddleware.ShouldSkip(c.Path()) {
+					return currentMiddleware.Handle()(next)(c)
+				}
+				return next(c)
 			}
 		})
 	}
 
+	// 注册路由
 	for _, r := range app.routeRegistrations {
 		app.appoptions = append(app.appoptions, fx.Invoke(r))
 	}
 
 	app.appoptions = append(app.appoptions,
-		fx.Supply(app.handler.(*gin.Engine)),
+		fx.Supply(app.handler.(*echo.Echo)), // echo.Echo 实现 http.Handler
 	)
 
 	app.app = fx.New(app.appoptions...)
 
-	// 启动应用程序
+	go func() {
+		app.Logger().Info("HTTP server starting...", zap.String("port", app.serverOptons.Port))
+		if err := app.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			app.Logger().Error("HTTP server ListenAndServe error", zap.Error(err))
+		}
+	}()
+
 	if err := app.Start(appCtx); err != nil {
 		return fmt.Errorf("start host failed: %w", err)
 	}
 
-	// 等待上下文被取消
 	<-appCtx.Done()
 
-	// 优雅关闭服务器
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -149,43 +177,43 @@ func (app *WebApplication) Run(ctx ...context.Context) error {
 	return app.Stop(shutdownCtx)
 }
 
-func (a *WebApplication) MapRoutes(registerFunc interface{}) *WebApplication {
-	a.routeRegistrations = append(a.routeRegistrations, registerFunc)
-	return a
-}
-
-// UseSwagger 配置Swagger
-func (a *WebApplication) UseSwagger() *WebApplication {
-	a.engine().GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	return a
-}
-
-// UseCORS 配置跨域
-func (a *WebApplication) UseCORS() *WebApplication {
-	a.engine().Use(cors.Default())
-	return a
-}
-
-// UseStaticFiles 配置静态文件
+// 静态文件
 func (a *WebApplication) UseStaticFiles(urlPath, root string) *WebApplication {
 	a.engine().Static(urlPath, root)
 	return a
 }
 
-// UseHealthCheck 配置健康检查
+// 健康检查
 func (a *WebApplication) UseHealthCheck() *WebApplication {
-	a.engine().GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+	a.engine().GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
 	return a
 }
 
-func (a *WebApplication) engine() *gin.Engine {
-	return a.handler.(*gin.Engine)
+// Swagger 支持
+func (a *WebApplication) UseSwagger() *WebApplication {
+	a.engine().GET("/swagger/*", echoSwagger.WrapHandler)
+	return a
 }
 
-// 注册中间件
-func (b *WebApplication) UseMiddleware(mws ...Middleware) *WebApplication {
-	b.middlewares = append(b.middlewares, mws...)
-	return b
+// CORS 支持
+func (a *WebApplication) UseCORS() *WebApplication {
+	a.engine().Use(echomiddleware.CORS())
+	return a
+}
+
+// 路由注册
+func (a *WebApplication) MapRoutes(registerFunc interface{}) *WebApplication {
+	a.routeRegistrations = append(a.routeRegistrations, registerFunc)
+	return a
+}
+
+// 中间件
+func (a *WebApplication) UseMiddleware(mws ...Middleware) *WebApplication {
+	a.middlewares = append(a.middlewares, mws...)
+	return a
+}
+func (a *WebApplication) engine() *echo.Echo {
+	return a.handler.(*echo.Echo)
 }

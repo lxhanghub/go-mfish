@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/lxhanghub/newb/pkg/cache"
 	"github.com/lxhanghub/newb/pkg/database"
 	"github.com/lxhanghub/newb/pkg/host"
@@ -42,10 +42,11 @@ func main() {
 	//app.UseSwagger()
 
 	// 配置路由
-	app.MapRoutes(func(router *gin.Engine) {
-		router.GET("/ping", func(c *gin.Context) {
-
-			c.JSON(200, gin.H{"message": "hello world"})
+	app.MapRoutes(func(router *echo.Echo) {
+		router.GET("/ping", func(c echo.Context) error {
+			return c.JSON(200, map[string]string{
+				"message": "hello world",
+			})
 		})
 	})
 
