@@ -42,6 +42,8 @@ type WebApplicationOptions struct {
 }
 
 func newWebApplication(options WebApplicationOptions) *WebApplication {
+	env := Environment{}
+
 	if options.Server == (ServerOptions{}) {
 		panic("web host options is empty")
 	}
@@ -53,6 +55,7 @@ func newWebApplication(options WebApplicationOptions) *WebApplication {
 	switch {
 	case debug:
 		// Debug模式
+		env.IsDevelopment = true
 		e.Debug = true
 		e.HideBanner = false
 		e.HidePort = false
