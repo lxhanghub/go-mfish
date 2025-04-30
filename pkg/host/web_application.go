@@ -108,6 +108,7 @@ func newWebApplication(options WebApplicationOptions) *WebApplication {
 		handler:      e,
 		middlewares:  make([]Middleware, 0),
 		serverOptons: options.Server,
+		Env:          env,
 	}
 }
 
