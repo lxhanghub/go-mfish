@@ -22,6 +22,10 @@ type Middleware interface {
 	ShouldSkip(path string) bool
 }
 
+type Environment struct {
+	IsDevelopment bool // 是否开发环境
+}
+
 type WebApplication struct {
 	*Application
 	handler            http.Handler
@@ -29,6 +33,7 @@ type WebApplication struct {
 	routeRegistrations []interface{}
 	middlewares        []Middleware
 	serverOptons       ServerOptions
+	Env                Environment //环境
 }
 
 type WebApplicationOptions struct {
