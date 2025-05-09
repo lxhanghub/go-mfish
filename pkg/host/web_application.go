@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"syscall"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type Middleware interface {
@@ -28,12 +30,13 @@ type Environment struct {
 
 type WebApplication struct {
 	*Application
-	handler            http.Handler
-	server             *http.Server
-	routeRegistrations []interface{}
-	middlewares        []Middleware
-	serverOptons       ServerOptions
-	Env                Environment //环境
+	handler                 http.Handler
+	server                  *http.Server
+	routeRegistrations      []interface{}
+	middlewares             []Middleware
+	serverOptons            ServerOptions
+	Env                     Environment //环境
+	grpcServiceConstructors []interface{}
 }
 
 type WebApplicationOptions struct {
@@ -139,6 +142,25 @@ func (app *WebApplication) Run(ctx ...context.Context) error {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// 启动 HTTP 服务器
+	go func() {
+		app.Logger().Info("HTTP server starting...", zap.String("port", app.serverOptons.Port))
+
+		if err := app.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			app.Logger().Error("HTTP server ListenAndServe error", zap.Error(err))
+		}
+	}()
+
+	// 启动 gRPC 服务器
+	if len(app.grpcServiceConstructors) > 0 {
+
+		app.appoptions = append(app.appoptions,
+			fx.Provide(func(lc fx.Lifecycle, logger *zap.Logger) *grpc.Server {
+				return NewGrpcServer(lc, logger, app.serverOptons)
+			}),
+		)
+	}
+
 	// 注册中间件（适配 interface）
 	for _, mw := range app.middlewares {
 		currentMiddleware := mw
@@ -225,4 +247,52 @@ func (a *WebApplication) UseMiddleware(mws ...Middleware) *WebApplication {
 }
 func (a *WebApplication) engine() *echo.Echo {
 	return a.handler.(*echo.Echo)
+}
+
+func (app *WebApplication) MapGrpcServices(constructors ...interface{}) *WebApplication {
+	for _, constructor := range constructors {
+		app.grpcServiceConstructors = append(app.grpcServiceConstructors, constructor)
+		app.appoptions = append(app.appoptions, fx.Provide(constructor))
+
+		// 推断构造函数的返回类型
+		constructorType := reflect.TypeOf(constructor)
+		if constructorType.Kind() != reflect.Func || constructorType.NumOut() == 0 {
+			panic("MapGrpcServices: constructor must be a function with at least one return value")
+		}
+
+		serviceType := constructorType.Out(0)
+
+		// 对每个具体服务构造出一个 fx.Invoke
+		invokeFn := makeGrpcInvoke(serviceType, app.Logger())
+		app.appoptions = append(app.appoptions, fx.Invoke(invokeFn))
+	}
+
+	return app
+}
+
+func makeGrpcInvoke(serviceType reflect.Type, logger *zap.Logger) interface{} {
+	// 构造函数类型：func(*grpc.Server, <YourServiceType>)
+	fnType := reflect.FuncOf(
+		[]reflect.Type{reflect.TypeOf((*grpc.Server)(nil)), serviceType}, // 入参类型
+		[]reflect.Type{}, // 返回值类型为空
+		false,            // 非变长参数
+	)
+
+	// 构造函数实现
+	fn := reflect.MakeFunc(fnType, func(args []reflect.Value) []reflect.Value {
+		server := args[0].Interface().(*grpc.Server)
+		svc := args[1].Interface()
+
+		grpcSvc, ok := svc.(GrpcService)
+		if !ok {
+			panic(fmt.Sprintf("MapGrpcServices: %s does not implement GrpcService", reflect.TypeOf(svc)))
+		}
+
+		grpcSvc.Register(server)
+		logger.Info("Registered gRPC service", zap.String("type", reflect.TypeOf(svc).String()))
+
+		return nil
+	})
+
+	return fn.Interface()
 }

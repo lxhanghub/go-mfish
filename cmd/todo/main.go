@@ -7,7 +7,6 @@ import (
 	"github.com/lxhanghub/newb/pkg/cache"
 	"github.com/lxhanghub/newb/pkg/database"
 	"github.com/lxhanghub/newb/pkg/host"
-	"github.com/lxhanghub/newb/pkg/middleware"
 	"go.uber.org/zap"
 	//_ "newb-sample/api/todo/docs" // swagger 一定要有这行,指向你的文档地址
 )
@@ -23,11 +22,9 @@ func main() {
 	})
 
 	// 配置依赖注入
-	builder.ConfigureServices(database.PostgresModule())
+	// builder.ConfigureServices(database.PostgresModule())
 
-	builder.ConfigureServices(cache.RedisModule())
-
-	//配置请求中间件,支持跳过
+	// builder.ConfigureServices(cache.RedisModule())
 
 	//构建应用
 	app, err := builder.Build()
@@ -37,7 +34,8 @@ func main() {
 		return
 	}
 
-	app.UseMiddleware(middleware.NewAuthorizationMiddleware([]string{"/hello"}))
+	//配置请求中间件,支持跳过
+	//app.UseMiddleware(middleware.NewAuthorizationMiddleware([]string{"/hello"}))
 
 	//app.UseSwagger()
 
@@ -49,6 +47,9 @@ func main() {
 			})
 		})
 	})
+
+	// Grpc 服务注册
+	app.MapGrpcServices(hello.NewHelloService)
 
 	// 运行应用
 	if err := app.Run(); err != nil {
