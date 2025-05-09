@@ -1,6 +1,6 @@
 module github.com/lxhanghub/newb
 
-go 1.23.6
+go 1.24
 
 toolchain go1.24.2
 
@@ -8,6 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.13.3
+	github.com/mehdihadeli/go-mediatr v1.4.0
 	github.com/mitchellh/mapstructure v1.5.1-0.20220423185008-bf980b35cac4
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
@@ -68,6 +69,8 @@ require (
 	github.com/swaggo/swag v1.8.12 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	go.uber.org/dig v1.18.0 // indirect
@@ -89,11 +92,9 @@ require (
 
 require (
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/labstack/echo v3.3.10+incompatible
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/xuri/excelize/v2 v2.9.0
 	golang.org/x/text v0.23.0 // indirect
