@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/labstack/echo/v4"
-	"github.com/lxhanghub/newb/pkg/cache"
-	"github.com/lxhanghub/newb/pkg/database"
+	// "github.com/lxhanghub/newb/pkg/cache"
+	// "github.com/lxhanghub/newb/pkg/database"
+	"github.com/lxhanghub/newb/internal/todo/grpcapi/hello"
 	"github.com/lxhanghub/newb/pkg/host"
 	"go.uber.org/zap"
 	//_ "newb-sample/api/todo/docs" // swagger 一定要有这行,指向你的文档地址

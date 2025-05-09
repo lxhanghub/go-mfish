@@ -185,13 +185,6 @@ func (app *WebApplication) Run(ctx ...context.Context) error {
 
 	app.app = fx.New(app.appoptions...)
 
-	go func() {
-		app.Logger().Info("HTTP server starting...", zap.String("port", app.serverOptons.Port))
-		if err := app.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			app.Logger().Error("HTTP server ListenAndServe error", zap.Error(err))
-		}
-	}()
-
 	if err := app.Start(appCtx); err != nil {
 		return fmt.Errorf("start host failed: %w", err)
 	}
