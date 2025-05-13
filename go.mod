@@ -6,7 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/labstack/echo/v4 v4.13.3
-	github.com/lxhanghub/newb v0.0.0-20250513040254-57af29b54722
+	github.com/lxhanghub/go-fish v0.0.0-20250513130138-04b6344132b3
 	github.com/swaggo/swag v1.8.12
 	go.uber.org/zap v1.26.0
 	google.golang.org/protobuf v1.36.6

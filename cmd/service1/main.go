@@ -7,7 +7,7 @@ import (
 	"cli-echo/internal/service1/grpcapi/hello"
 	"cli-echo/internal/service1/webapi"
 
-	"github.com/lxhanghub/newb/pkg/host"
+	"github.com/lxhanghub/go-fish/pkg/host"
 	"go.uber.org/zap"
 )
 
