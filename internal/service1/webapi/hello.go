@@ -1,13 +1,13 @@
 package webapi
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/lxhanghub/newb/pkg/api"
 	"go.uber.org/zap"
 )
 
 func Hello(
-	router *gin.Engine, //gin 放在第一位
+	router *echo.Echo, //echo
 	log *zap.Logger, // 日志
 ) {
 
@@ -27,9 +27,9 @@ func Hello(
 // @Produce json
 // @Success 200 {object} api.Response[string]
 // @Router /hello [get]
-func HelloNewb(log *zap.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func HelloNewb(log *zap.Logger) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		data := api.Success("hello newb")
-		c.JSON(200, data)
+		return c.JSON(200, data)
 	}
 }
