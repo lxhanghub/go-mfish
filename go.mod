@@ -1,4 +1,4 @@
-module github.com/lxhanghub/go-fish
+module github.com/lxhanghub/go-mfish
 
 go 1.24
 
