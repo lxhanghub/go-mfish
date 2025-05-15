@@ -2,7 +2,7 @@ package webapi
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/lxhanghub/go-fish/pkg/api"
+	"github.com/lxhanghub/go-mfish/pkg/api"
 	"go.uber.org/zap"
 )
 
