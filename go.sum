@@ -86,8 +86,8 @@ github.com/labstack/gommon v0.4.2 h1:F8qTUNXgG1+6WQmqoUWnz8WiEU60mXVVw0P4ht1WRA0
 github.com/labstack/gommon v0.4.2/go.mod h1:QlUFxVM+SNXhDL/Z7YhocGIBYOiwB0mXm1+1bAPHPyU=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
-github.com/lxhanghub/go-mfish v0.0.0-20250515015059-c2ac9c278a10 h1:ZXeEReeSODBGjxo4Yfj6nP1AU1MnD7VFBCaQHeUmU8o=
-github.com/lxhanghub/go-mfish v0.0.0-20250515015059-c2ac9c278a10/go.mod h1:rab5stW1CnERECFNi6z1qug67n9oYI56Rty94w1eIoY=
+github.com/lxhanghub/go-workit v0.0.0-20250528033912-2557bc6d42ed h1:WcoBYUPNvxMu8zwhORcHoxvbDihV0MASa1ZPOC4vBQ8=
+github.com/lxhanghub/go-workit v0.0.0-20250528033912-2557bc6d42ed/go.mod h1:Nx7tlWS3DjVWwptJKOByxaARqvCQKPh+VNhm1wHW4Nc=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=

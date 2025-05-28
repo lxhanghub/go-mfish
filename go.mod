@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/labstack/echo/v4 v4.13.3
+	github.com/lxhanghub/go-workit v0.0.0-20250528033912-2557bc6d42ed
 	github.com/swaggo/swag v1.8.12
 	go.uber.org/zap v1.26.0
 	google.golang.org/protobuf v1.36.6
@@ -34,7 +35,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/lxhanghub/go-mfish v0.0.0-20250515015059-c2ac9c278a10 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
