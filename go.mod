@@ -1,4 +1,4 @@
-module github.com/lxhanghub/go-mfish
+module github.com/lxhanghub/go-workit
 
 go 1.24
 
