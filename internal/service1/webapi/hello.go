@@ -1,8 +1,8 @@
 package webapi
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/lxhanghub/go-workit/pkg/api"
+	"github.com/labstack/echo/v4"
+	"github.com/xiaohangshuhub/go-workit/pkg/api"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +19,7 @@ func Hello(
 	group.GET("", HelloNewb(log))
 }
 
-// HelloNewb godoc
+// Helle xiaohangshu godoc
 // @Summary hello Newb
 // @Description 返回 "hello newb"
 // @Tags Hello
@@ -27,9 +27,9 @@ func Hello(
 // @Produce json
 // @Success 200 {object} api.Response[string]
 // @Router /hello [get]
-func HelloNewb(log *zap.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		data := api.Success("hello newb")
-		c.JSON(200, data)
+func HelloNewb(log *zap.Logger) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		data := api.Success("你好,小航书")
+		return c.JSON(200, data)
 	}
 }
