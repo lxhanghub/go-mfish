@@ -1,7 +1,7 @@
 package webapi
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/gin-gonic/gin"
 	"github.com/lxhanghub/go-workit/pkg/api"
 	"go.uber.org/zap"
 )
@@ -27,9 +27,9 @@ func Hello(
 // @Produce json
 // @Success 200 {object} api.Response[string]
 // @Router /hello [get]
-func HelloNewb(log *zap.Logger) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func HelloNewb(log *zap.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		data := api.Success("hello newb")
-		return c.JSON(200, data)
+		c.JSON(200, data)
 	}
 }
