@@ -2,7 +2,7 @@ package webapi
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/lxhanghub/go-workit/pkg/api"
+	"github.com/xiaohangshuhub/go-workit/pkg/api"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +19,7 @@ func Hello(
 	group.GET("", HelloNewb(log))
 }
 
-// HelloNewb godoc
+// Hello xiaohangshu godoc
 // @Summary hello Newb
 // @Description 返回 "hello newb"
 // @Tags Hello
@@ -29,7 +29,7 @@ func Hello(
 // @Router /hello [get]
 func HelloNewb(log *zap.Logger) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		data := api.Success("hello newb")
+		data := api.Success("你好,小航书")
 		return c.JSON(200, data)
 	}
 }

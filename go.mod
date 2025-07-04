@@ -6,7 +6,6 @@ toolchain go1.24.2
 
 require (
 	github.com/labstack/echo/v4 v4.13.3
-	github.com/lxhanghub/go-workit v0.0.0-20250528033912-2557bc6d42ed
 	github.com/swaggo/swag v1.8.12
 	go.uber.org/zap v1.26.0
 	google.golang.org/protobuf v1.36.6
@@ -57,6 +56,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/xiaohangshuhub/go-workit v0.0.0-20250704130217-bc53437cd3f4 // indirect
 	go.uber.org/dig v1.18.0 // indirect
 	go.uber.org/fx v1.23.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
